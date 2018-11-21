@@ -1,4 +1,5 @@
-*External Authorization*
+***External Authorization***
+This project provides two examples of authorization servers that alllow validating the request body received in Ambassador.
 
 ***HTTP & gRPC examples***
 
