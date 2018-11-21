@@ -19,7 +19,7 @@ $ curl -v -X POST -H "x-encoded-hash: 123" EXTERNAL_IP/httpbin/post -d "the mess
 
 ***Developement***
 
-Use the provided Dockerfiles to build, e.g:
+Use the provided Dockerfile to build, e.g:
 ```
 $ cd grpc-example && docker build -t auth-service-grpc .
 ```
