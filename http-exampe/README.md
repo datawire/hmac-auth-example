@@ -1,4 +1,4 @@
-***External Authorization - HTTP example
+***External Authorization - HTTP example***
 
 1. Deploy `ambassador.yaml`
 2. Get ambassador's external ip.
