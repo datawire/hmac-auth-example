@@ -63,7 +63,7 @@ metadata:
       kind: BufferService
       name:  buffer
       max_request_bytes: 16384
-      max_request_time: 5000
+      max_request_time: 500
       ---
       apiVersion: ambassador/v1
       kind: AuthService
@@ -71,7 +71,7 @@ metadata:
       proto: http
       auth_service: "authservice:8088"
       path_prefix: "/extauth"
-      timeout_ms: 3000
+      timeout_ms: 500
       allow_request_body: True
       allowed_request_headers:
       - x-encoded-hash
@@ -142,6 +142,8 @@ spec:
           initialDelaySeconds: 30
           periodSeconds: 3
       restartPolicy: Always
+
+# HTTPBIN
 ---
 apiVersion: v1
 kind: Service
@@ -155,14 +157,39 @@ metadata:
       kind:  Mapping
       name:  httpbin_mapping
       prefix: /httpbin/
-      service: httpbin.org:80
-      host_rewrite: httpbin.org
-      timeout_ms: 5000
+      service: httpbin:8080
+      timeout_ms: 200
 spec:
-  type: NodePort
+  type: ClusterIP
+  selector:
+    name:  httpbin
   ports:
   - name: httpbin
-    port: 80
+    port: 8080
+    targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: datawire
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: httpbin
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: httpbin
+        image: kennethreitz/httpbin
+        ports:
+        - containerPort: 80
+
+# AUTH SERVICE
 ---
 apiVersion: v1
 kind: Service
