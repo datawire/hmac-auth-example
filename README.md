@@ -1,4 +1,4 @@
-**External Authorization**
+*External Authorization*
 
 ***HTTP & gRPC examples***
 
@@ -40,4 +40,9 @@ annotations:
       name: buffer
       max_request_bytes: 16384
       max_request_time: 500
+```
+
+In order to send the message body over the authorization filter, the following setting in `getambassador.io/config` must be set to `True`:
+```
+allow_request_body: true
 ```
