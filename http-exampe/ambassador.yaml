@@ -1,0 +1,216 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: datawire
+  labels:
+    name: datawire
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: ambassador-admin
+  name: ambassador-admin
+  namespace: datawire
+spec:
+  type: NodePort
+  ports:
+  - name: ambassador-admin
+    port: 8877
+    targetPort: 8877
+  selector:
+    service: ambassador
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: ambassador
+  namespace: datawire
+rules:
+- apiGroups: ["stable.datawire.io"]
+  resources:
+  - policies
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["create", "update", "patch", "get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ambassador
+  namespace: datawire
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ambassador
+  namespace: datawire
+  annotations:
+    getambassador.io/config: |
+      # Note that ext-authz filter will need the entire message body, so it's highly
+      # recomended buffering the stream and limit the size of a message before proceding
+      # to the rest of the filter chain.
+      ---
+      apiVersion: ambassador/v1
+      kind: BufferService
+      name:  buffer
+      max_request_bytes: 16384
+      max_request_time: 5000
+      ---
+      apiVersion: ambassador/v1
+      kind: AuthService
+      name:  authentication
+      # enum that indicates which client should be used (required).
+      proto: http
+      auth_service: "authservice:8088"
+      path_prefix: "/extauth"
+      timeout_ms: 3000
+      # When this flag is thru, the filter will stop the stream headers and send them
+      # with the entire buffer to the upstream authorization server.
+      allow_request_body: True
+      # Headers that are allowed to be sent to the authorization server.
+      allowed_request_headers:
+      - x-encoded-hash
+      # Headers that are allowed to be sent from the authorization server to the upstream 
+      # service or back to the downstream client.
+      # allowed_response_headers:
+      # - x-response-hash
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    service: ambassador
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: ambassador
+  namespace: datawire
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ambassador
+subjects:
+- kind: ServiceAccount
+  name: ambassador
+  namespace: datawire
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ambassador
+  namespace: datawire
+spec:
+  replicas: 3
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        service: ambassador
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: ambassador
+        image: quay.io/datawire/itx-auth:ambassador
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 1
+            memory: 400Mi
+          requests:
+            cpu: 200m
+            memory: 100Mi
+        env:
+        - name: AMBASSADOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace          
+        livenessProbe:
+          httpGet:
+            path: /ambassador/v0/check_alive
+            port: 8877
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /ambassador/v0/check_ready
+            port: 8877
+          initialDelaySeconds: 30
+          periodSeconds: 3
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: datawire
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name:  httpbin_mapping
+      prefix: /httpbin/
+      service: httpbin.org:80
+      host_rewrite: httpbin.org
+      timeout_ms: 5000
+spec:
+  type: NodePort
+  ports:
+  - name: httpbin
+    port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authservice
+  namespace: datawire
+spec:
+  type: ClusterIP
+  selector:
+    name:  authservice
+  ports:
+  - port: 8088
+    name: http-authservice
+    targetPort: http-api
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: authservice
+  namespace: datawire
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: authservice
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: authservice
+        image: quay.io/datawire/itx-auth:http
+        imagePullPolicy: Always
+        ports:
+        - name: http-api
+          containerPort: 8088
+        env:
+          - name: SECRET
+            value: "the shared secret key here"

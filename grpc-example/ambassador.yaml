@@ -1,0 +1,236 @@
+---
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: datawire
+  labels:
+    name: datawire
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: ambassador-admin
+  name: ambassador-admin
+  namespace: datawire
+spec:
+  type: NodePort
+  ports:
+  - name: ambassador-admin
+    port: 8877
+    targetPort: 8877
+  selector:
+    service: ambassador
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: ambassador
+  namespace: datawire
+rules:
+- apiGroups: ["stable.datawire.io"]
+  resources:
+  - policies
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - services
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - configmaps
+  verbs: ["create", "update", "patch", "get", "list", "watch"]
+- apiGroups: [""]
+  resources:
+  - secrets
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ambassador
+  namespace: datawire
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ambassador
+  namespace: datawire
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v1
+      kind: BufferService
+      name: buffer
+      max_request_bytes: 16384
+      max_request_time: 500
+      ---
+      apiVersion: ambassador/v1
+      kind: AuthService
+      name: authentication
+      proto: grpc
+      auth_service: "authservice:50051"
+      allow_request_body: true
+      timeout_ms: 500
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  selector:
+    service: ambassador
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: ambassador
+  namespace: datawire
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ambassador
+subjects:
+- kind: ServiceAccount
+  name: ambassador
+  namespace: datawire
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ambassador
+  namespace: datawire
+spec:
+  replicas: 3
+  template:
+    metadata:
+      annotations:
+        sidecar.istio.io/inject: "false"
+      labels:
+        service: ambassador
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: ambassador
+        image: quay.io/datawire/itx-auth:ambassador
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 1
+            memory: 400Mi
+          requests:
+            cpu: 200m
+            memory: 100Mi
+        env:
+        - name: AMBASSADOR_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace          
+        livenessProbe:
+          httpGet:
+            path: /ambassador/v0/check_alive
+            port: 8877
+          initialDelaySeconds: 30
+          periodSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /ambassador/v0/check_ready
+            port: 8877
+          initialDelaySeconds: 30
+          periodSeconds: 3
+      restartPolicy: Always
+
+# HTTPBIN
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpbin
+  namespace: datawire
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v0
+      kind:  Mapping
+      name:  httpbin_mapping
+      prefix: /httpbin/
+      service: httpbin:8080
+      timeout_ms: 200
+spec:
+  type: ClusterIP
+  selector:
+    name:  httpbin
+  ports:
+  - name: httpbin
+    port: 8080
+    targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: httpbin
+  namespace: datawire
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: httpbin
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: httpbin
+        image: kennethreitz/httpbin
+        ports:
+        - containerPort: 80
+
+# AUTH SERVICE
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authservice
+  namespace: datawire
+spec:
+  type: ClusterIP
+  selector:
+    name:  authservice
+  ports:
+  - protocol: TCP
+    port: 50051
+    targetPort: 50051
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: authservice
+  namespace: datawire
+  annotations:
+    getambassador.io/config: |
+      ---
+      apiVersion: ambassador/v0
+      kind: Mapping
+      name: grpc_mapping
+      grpc: True
+      service: authservice
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        name: authservice
+    spec:
+      serviceAccountName: ambassador
+      containers:
+      - name: authservice
+        image: quay.io/datawire/itx-auth:grpc
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 50051
+        env:
+        - name: SECRET
+          value: "the shared secret key here"
