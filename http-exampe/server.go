@@ -11,25 +11,23 @@ import (
 	"os"
 )
 
-func check(w http.ResponseWriter, r *http.Request) {
-	secret := os.Getenv("SECRET")
-	if secret == "" {
-		err := errors.New("missing secret")
-		log.Printf("%v", err)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
+// Server implements a HTTP handler that validates a request body.
+type Server struct {
+	Secret string
+}
 
+// Check request object.
+func (s *Server) check(w http.ResponseWriter, r *http.Request) {
 	// Get x-encoded-hash header.
-	hashHDR := r.Header.Get("x-encoded-hash")
-	if hashHDR == "" {
+	header := r.Header.Get("x-encoded-hash")
+	if header == "" {
 		err := errors.New("missing x-encoded-hash")
 		log.Printf("%v", err)
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	log.Printf("x-encoded-hash: %s\n", hashHDR)
+	log.Printf("x-encoded-hash: %s\n", header)
 
 	// Get message body.
 	var body []byte
@@ -41,15 +39,14 @@ func check(w http.ResponseWriter, r *http.Request) {
 	log.Printf("message body received: %+v bytes\n", len(string(body)))
 
 	// Take a simple hash of the message.
-	secretBytes := []byte(secret)
+	secretBytes := []byte(s.Secret)
 	hash := hmac.New(sha256.New, secretBytes)
 	hash.Write(body)
-	hexHASH := hex.EncodeToString(hash.Sum(nil))
 
 	// If x-auth-hash does not match the hashed message, the authorization server
 	// responds with 401 which will be picked by the filter and returned to the
 	// downstream.
-	if hexHASH != hashHDR {
+	if hex.EncodeToString(hash.Sum(nil)) != header {
 		log.Printf("invalid hmac")
 		w.WriteHeader(http.StatusUnauthorized)
 		return
@@ -63,7 +60,16 @@ func check(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	log.Print("serving on port 8088")
-	http.HandleFunc("/extauth/", check)
+	server := &Server{
+		Secret: os.Getenv("SECRET"),
+	}
+
+	if server.Secret == "" {
+		err := errors.New("missing secret")
+		log.Printf("%v", err)
+	}
+
+	http.HandleFunc("/extauth/", server.check)
 
 	log.Fatal(http.ListenAndServe("0.0.0.0:8088", nil))
 }
