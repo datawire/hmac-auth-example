@@ -57,10 +57,7 @@ metadata:
   name: ambassador
   namespace: datawire
   annotations:
-    getambassador.io/config: |
-      # Note that ext-authz filter will need the entire message body, so it's highly
-      # recomended buffering the stream and limit the size of a message before proceding
-      # to the rest of the filter chain.
+    getambassador.io/config: |  
       ---
       apiVersion: ambassador/v1
       kind: BufferService
@@ -71,21 +68,13 @@ metadata:
       apiVersion: ambassador/v1
       kind: AuthService
       name:  authentication
-      # enum that indicates which client should be used (required).
       proto: http
       auth_service: "authservice:8088"
       path_prefix: "/extauth"
       timeout_ms: 3000
-      # When this flag is thru, the filter will stop the stream headers and send them
-      # with the entire buffer to the upstream authorization server.
       allow_request_body: True
-      # Headers that are allowed to be sent to the authorization server.
       allowed_request_headers:
       - x-encoded-hash
-      # Headers that are allowed to be sent from the authorization server to the upstream 
-      # service or back to the downstream client.
-      # allowed_response_headers:
-      # - x-response-hash
 spec:
   type: LoadBalancer
   ports:
