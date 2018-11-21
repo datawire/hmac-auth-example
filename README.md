@@ -8,7 +8,8 @@
 
 Authorized call:
 ```
-$ curl -v -X POST -H "x-encoded-hash: 4643978965ffcec6e6d73b36a39ae43ceb15f7ef8131b8307862ebc560e7f988" {EXTERNAL_IP}/httpbin/post -d "the message to hash here"
+$ curl -v -X POST -H "x-encoded-hash: 4643978965ffcec6e6d73b36a39ae43ceb15f7ef8131b8307862ebc560e7f988" \
+  {EXTERNAL_IP}/httpbin/post -d "the message to hash here"
 ```
 
 Unauthorized call:
