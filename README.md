@@ -48,4 +48,3 @@ In order to send the message body over the authorization filter, the following s
 ```
 allow_request_body: true
 ```
-g
