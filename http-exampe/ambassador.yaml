@@ -59,15 +59,17 @@ metadata:
   annotations:
     getambassador.io/config: |  
       ---
-      apiVersion: ambassador/v1
-      kind: BufferService
-      name:  buffer
-      max_request_bytes: 16384
-      max_request_time: 500
+      apiVersion: ambassador/v0
+      kind: Module
+      name: ambassador
+      config:
+        buffer:  
+          max_request_bytes: 16384
+          max_request_time: 5000
       ---
       apiVersion: ambassador/v1
       kind: AuthService
-      name:  authentication
+      name: authentication
       proto: http
       auth_service: "authservice:8088"
       path_prefix: "/extauth"
@@ -115,7 +117,7 @@ spec:
       serviceAccountName: ambassador
       containers:
       - name: ambassador
-        image: quay.io/datawire/itx-auth:ambassador
+        image: quay.io/gsagula/ambassador:interdax-ambassador-bec0616b-dirty
         imagePullPolicy: Always
         resources:
           limits:
