@@ -17,7 +17,7 @@ import fmt "fmt"
 import math "math"
 import envoy_api_v2_ratelimit "github.com/envoyproxy/go-control-plane/envoy/api/v2/ratelimit"
 import _ "github.com/gogo/protobuf/types"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import time "time"

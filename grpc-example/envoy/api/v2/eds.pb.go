@@ -9,7 +9,7 @@ import math "math"
 import envoy_api_v2_endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 import envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
 import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 import _ "github.com/gogo/protobuf/gogoproto"
 import google_protobuf2 "github.com/gogo/protobuf/types"
 

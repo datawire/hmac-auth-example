@@ -16,7 +16,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import envoy_config_filter_fault_v2 "github.com/envoyproxy/go-control-plane/envoy/config/filter/fault/v2"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 
 import io "io"
 

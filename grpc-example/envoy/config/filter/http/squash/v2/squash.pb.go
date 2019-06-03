@@ -17,7 +17,7 @@ import fmt "fmt"
 import math "math"
 import _ "github.com/gogo/protobuf/types"
 import google_protobuf1 "github.com/gogo/protobuf/types"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import time "time"

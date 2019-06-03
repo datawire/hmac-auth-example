@@ -19,7 +19,7 @@ import math "math"
 import envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 import opencensus_proto_trace "istio.io/gogo-genproto/opencensus/proto/trace"
 import _ "github.com/gogo/googleapis/google/api"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 
 import context "golang.org/x/net/context"
 import grpc "google.golang.org/grpc"

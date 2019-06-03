@@ -24,7 +24,7 @@ import envoy_api_v2_core1 "github.com/envoyproxy/go-control-plane/envoy/api/v2/c
 import google_protobuf "github.com/gogo/protobuf/types"
 import google_protobuf1 "github.com/gogo/protobuf/types"
 import google_protobuf2 "github.com/gogo/protobuf/types"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 
 import io "io"
 
