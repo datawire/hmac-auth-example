@@ -21,7 +21,7 @@ import math "math"
 import envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 import envoy_api_v2_core1 "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 import envoy_api_v2_core2 "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 
 import io "io"
 

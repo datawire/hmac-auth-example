@@ -30,7 +30,7 @@ import envoy_config_metrics_v2 "github.com/envoyproxy/go-control-plane/envoy/con
 import envoy_config_overload_v2alpha "github.com/envoyproxy/go-control-plane/envoy/config/overload/v2alpha"
 import envoy_config_ratelimit_v2 "github.com/envoyproxy/go-control-plane/envoy/config/ratelimit/v2"
 import google_protobuf4 "github.com/gogo/protobuf/types"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import time "time"

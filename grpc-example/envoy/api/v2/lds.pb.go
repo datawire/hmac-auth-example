@@ -11,7 +11,7 @@ import envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/co
 import envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 import _ "github.com/gogo/googleapis/google/api"
 import google_protobuf2 "github.com/gogo/protobuf/types"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 import _ "github.com/gogo/protobuf/gogoproto"
 
 import context "golang.org/x/net/context"

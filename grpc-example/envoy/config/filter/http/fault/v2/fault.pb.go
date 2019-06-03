@@ -19,7 +19,7 @@ import math "math"
 import envoy_api_v2_route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 import envoy_config_filter_fault_v2 "github.com/envoyproxy/go-control-plane/envoy/config/filter/fault/v2"
 import envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
-import _ "github.com/lyft/protoc-gen-validate/validate"
+import _ "github.com/envoyproxy/protoc-gen-validate/validate"
 
 import io "io"
 
